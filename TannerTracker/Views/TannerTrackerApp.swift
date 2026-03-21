@@ -2,16 +2,18 @@
 //  TannerTrackerApp.swift
 //  TannerTracker
 //
-//  Created by Talmage Gaisford on 1/11/26.
-//
 
 import SwiftUI
+import SwiftData
 
 @main
 struct TannerTrackerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .modelContainer(for: [Exercise.self, WorkoutEntry.self])
+                .environment(AppSettings.shared)
+                .preferredColorScheme(.dark)
         }
     }
 }

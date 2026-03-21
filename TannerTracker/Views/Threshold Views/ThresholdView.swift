@@ -1,11 +1,11 @@
 //
-//  PhotosView.swift
+//  ThresholdView.swift
 //  TannerTracker
 //
 
 import SwiftUI
 
-struct PhotosView: View {
+struct ThresholdView: View {
     @Environment(AppSettings.self) var settings
 
     var body: some View {
@@ -14,23 +14,23 @@ struct PhotosView: View {
                 Color(hex: "#1A1A1A").ignoresSafeArea()
 
                 VStack(spacing: 16) {
-                    Image(systemName: "camera.fill")
+                    Image(systemName: "figure.strengthtraining.traditional")
                         .font(.system(size: 64))
                         .foregroundStyle(Color.gray.opacity(0.25))
-                    Text("Progress Photos")
+                    Text("Threshold")
                         .font(.title2.bold())
                         .foregroundStyle(.white)
                     Text("Coming soon")
                         .foregroundStyle(.gray)
                 }
             }
-            .navigationTitle("Photos")
+            .navigationTitle("Threshold")
             .navigationBarTitleDisplayMode(.large)
         }
     }
 }
 
 #Preview {
-    PhotosView()
+    ThresholdView()
         .environment(AppSettings.shared)
 }

@@ -1,18 +1,36 @@
 //
-//  ProgressView.swift
+//  WorkoutProgressView.swift
 //  TannerTracker
-//
-//  Created by Talmage Gaisford on 1/11/26.
 //
 
 import SwiftUI
 
-struct ProgressView: View {
+struct WorkoutProgressView: View {
+    @Environment(AppSettings.self) var settings
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationStack {
+            ZStack {
+                Color(hex: "#1A1A1A").ignoresSafeArea()
+
+                VStack(spacing: 16) {
+                    Image(systemName: "dumbbell.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(Color.gray.opacity(0.25))
+                    Text("Progress")
+                        .font(.title2.bold())
+                        .foregroundStyle(.white)
+                    Text("Coming soon")
+                        .foregroundStyle(.gray)
+                }
+            }
+            .navigationTitle("Progress")
+            .navigationBarTitleDisplayMode(.large)
+        }
     }
 }
 
 #Preview {
-    ProgressView()
+    WorkoutProgressView()
+        .environment(AppSettings.shared)
 }
