@@ -8,6 +8,8 @@ import SwiftUI
 struct WorkoutProgressView: View {
     @Environment(AppSettings.self) var settings
 
+    @State private var showSettings = false
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -26,6 +28,21 @@ struct WorkoutProgressView: View {
             }
             .navigationTitle("Progress")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(settings.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
     }
 }

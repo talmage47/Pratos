@@ -9,6 +9,7 @@ import UIKit
 struct UICalendarViewRepresentable: UIViewRepresentable {
     let datesWithWorkouts: Set<DateComponents>
     let accentColor: Color
+    let initialDate: Date
     let onDateSelected: (Date) -> Void
 
     func makeUIView(context: Context) -> UICalendarView {
@@ -16,10 +17,13 @@ struct UICalendarViewRepresentable: UIViewRepresentable {
         calendarView.calendar = Calendar.current
         calendarView.locale = Locale.current
         calendarView.backgroundColor = .clear
+        calendarView.overrideUserInterfaceStyle = .dark
         calendarView.delegate = context.coordinator
 
         let selection = UICalendarSelectionSingleDate(delegate: context.coordinator)
         calendarView.selectionBehavior = selection
+
+        calendarView.visibleDateComponents = Calendar.current.dateComponents([.year, .month], from: initialDate)
 
         return calendarView
     }

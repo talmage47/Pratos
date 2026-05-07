@@ -11,6 +11,7 @@ struct MonthView: View {
     @Environment(AppSettings.self) var settings
     @Query(sort: \WorkoutEntry.date) private var allEntries: [WorkoutEntry]
 
+    var initialDate: Date = Date()
     var onDateSelected: (Date) -> Void = { _ in }
 
     @State private var tappedDate: Date?
@@ -28,12 +29,12 @@ struct MonthView: View {
 
                 UICalendarViewRepresentable(
                     datesWithWorkouts: datesWithWorkouts,
-                    accentColor: settings.accentColor
+                    accentColor: settings.accentColor,
+                    initialDate: initialDate
                 ) { date in
                     tappedDate = date
                 }
             }
-            .navigationTitle("Calendar")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

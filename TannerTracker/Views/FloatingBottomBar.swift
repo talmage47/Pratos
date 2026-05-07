@@ -37,7 +37,7 @@ struct FloatingBottomBar: View {
                     Circle()
                         .fill(accentColor)
                         .frame(width: 56, height: 56)
-                        .shadow(color: accentColor.opacity(0.55), radius: 14, y: 4)
+                        .shadow(color: accentColor.opacity(0.35), radius: 10, y: 4)
                     Image(systemName: "plus")
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(.white)
