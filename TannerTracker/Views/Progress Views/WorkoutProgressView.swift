@@ -8,7 +8,8 @@ import SwiftData
 
 struct WorkoutProgressView: View {
     @Environment(AppSettings.self) var settings
-    @Query(sort: \Exercise.name) private var exercises: [Exercise]
+    @Query(filter: #Predicate<Exercise> { $0.isRemoved == false }, sort: \Exercise.name)
+    private var exercises: [Exercise]
 
     @State private var showSettings = false
     @State private var searchText = ""

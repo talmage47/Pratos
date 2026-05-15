@@ -10,12 +10,10 @@ struct AddWorkoutView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(AppSettings.self) var settings
-    @Query(sort: \Exercise.name) private var exercises: [Exercise]
-
     var editingEntry: WorkoutEntry?
     var date: Date
 
-    @State private var selectedExerciseName: String
+    @State private var selectedExercise: Exercise?
     @State private var weight: Double
     @State private var reps: Int
     @State private var sets: Int
@@ -31,7 +29,7 @@ struct AddWorkoutView: View {
     init(editingEntry: WorkoutEntry? = nil, date: Date = Date()) {
         self.editingEntry = editingEntry
         self.date = date
-        _selectedExerciseName = State(initialValue: editingEntry?.exerciseName ?? "")
+        _selectedExercise = State(initialValue: editingEntry.flatMap { $0.exercise })
         _weight = State(initialValue: editingEntry?.weight ?? 0)
         _reps = State(initialValue: editingEntry?.reps ?? 10)
         _sets = State(initialValue: editingEntry?.sets ?? 3)
@@ -65,7 +63,7 @@ struct AddWorkoutView: View {
         }
         .presentationDragIndicator(.visible)
         .sheet(isPresented: $showExerciseSelector) {
-            ExerciseSelectorView(exercises: exercises, selectedName: $selectedExerciseName)
+            ExerciseSelectorView(selectedExercise: $selectedExercise)
         }
     }
 
@@ -77,8 +75,8 @@ struct AddWorkoutView: View {
                 showExerciseSelector = true
             } label: {
                 HStack {
-                    Text(selectedExerciseName.isEmpty ? "Select Exercise" : selectedExerciseName)
-                        .foregroundStyle(selectedExerciseName.isEmpty ? Color.gray : Color.white)
+                    Text(selectedExercise?.name ?? "Select Exercise")
+                        .foregroundStyle(selectedExercise == nil ? Color.gray : Color.white)
                         .font(.body)
                     Spacer()
                     Image(systemName: "chevron.down")
@@ -188,10 +186,10 @@ struct AddWorkoutView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(selectedExerciseName.isEmpty ? Color.gray.opacity(0.3) : settings.accentColor)
+                .background(selectedExercise == nil ? Color.gray.opacity(0.3) : settings.accentColor)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .disabled(selectedExerciseName.isEmpty)
+        .disabled(selectedExercise == nil)
     }
 
     private func formatWeight(_ value: Double) -> String {
@@ -200,13 +198,13 @@ struct AddWorkoutView: View {
 
     private func save() {
         if let entry = editingEntry {
-            entry.exerciseName = selectedExerciseName
+            entry.exercise = selectedExercise
             entry.weight = weight
             entry.reps = reps
             entry.sets = sets
         } else {
             let entry = WorkoutEntry(
-                exerciseName: selectedExerciseName,
+                exercise: selectedExercise,
                 weight: weight,
                 reps: reps,
                 sets: sets,

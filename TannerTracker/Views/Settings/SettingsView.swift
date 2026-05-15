@@ -10,6 +10,9 @@ struct SettingsView: View {
     @Environment(AppSettings.self) var settings
 
     @State private var accentColor: Color = AppSettings.shared.accentColor
+    @State private var showWorkoutList = false
+    @State private var showRemovedExercises = false
+    @State private var dummySelectedExercise: Exercise? = nil
 
     var body: some View {
         @Bindable var settings = settings
@@ -72,6 +75,40 @@ struct SettingsView: View {
                         Text("Appearance")
                             .foregroundStyle(.gray)
                     }
+
+                    // Exercises
+                    Section {
+                        Button {
+                            showWorkoutList = true
+                        } label: {
+                            HStack {
+                                Text("Workout List")
+                                    .foregroundStyle(.white)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.gray)
+                            }
+                        }
+                        .listRowBackground(Color(hex: "#242424"))
+
+                        Button {
+                            showRemovedExercises = true
+                        } label: {
+                            HStack {
+                                Text("Removed Exercises")
+                                    .foregroundStyle(.white)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.gray)
+                            }
+                        }
+                        .listRowBackground(Color(hex: "#242424"))
+                    } header: {
+                        Text("Exercises")
+                            .foregroundStyle(.gray)
+                    }
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -86,6 +123,12 @@ struct SettingsView: View {
             .onAppear {
                 accentColor = settings.accentColor
             }
+        }
+        .sheet(isPresented: $showWorkoutList) {
+            ExerciseSelectorView(selectedExercise: $dummySelectedExercise)
+        }
+        .sheet(isPresented: $showRemovedExercises) {
+            RemovedExercisesView()
         }
     }
 }

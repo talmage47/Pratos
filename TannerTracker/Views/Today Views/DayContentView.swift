@@ -253,7 +253,7 @@ struct DayContentView: View {
                 entryToDelete = nil
             }
         } message: { entry in
-            Text("Delete \(entry.exerciseName)?")
+            Text("Delete \(entry.exercise?.name ?? "this workout")?")
         }
     }
 }

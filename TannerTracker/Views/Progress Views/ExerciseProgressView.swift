@@ -13,7 +13,7 @@ struct ExerciseProgressView: View {
     @Query private var allEntries: [WorkoutEntry]
 
     private var exerciseEntries: [WorkoutEntry] {
-        allEntries.filter { $0.exerciseName == exercise.name }
+        allEntries.filter { $0.exercise?.persistentModelID == exercise.persistentModelID }
     }
 
     private func epleyValue(weight: Double, reps: Int) -> Double {

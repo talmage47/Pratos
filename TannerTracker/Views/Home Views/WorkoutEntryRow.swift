@@ -17,7 +17,7 @@ struct WorkoutEntryRow: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(entry.exerciseName)
+                Text(entry.exercise?.name ?? "Unknown")
                     .font(.headline)
                     .foregroundStyle(.white)
 
