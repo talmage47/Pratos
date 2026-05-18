@@ -32,12 +32,23 @@ struct ExerciseSelectorView: View {
     }
 
     private var hasExactMatch: Bool {
-        exercises.contains { $0.name.localizedCaseInsensitiveCompare(searchText) == .orderedSame }
+        nameAlreadyExists(searchText)
     }
 
     private var canSaveEdit: Bool {
         let trimmed = editingName.trimmingCharacters(in: .whitespaces)
-        return !trimmed.isEmpty && trimmed != editingExercise?.name
+        guard !trimmed.isEmpty, trimmed != editingExercise?.name else { return false }
+        return !nameAlreadyExists(trimmed)
+    }
+
+    private func nameAlreadyExists(_ name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        return exercises.contains { $0.name.localizedCaseInsensitiveCompare(trimmed) == .orderedSame }
+    }
+
+    private var canCreate: Bool {
+        let trimmed = newExerciseName.trimmingCharacters(in: .whitespaces)
+        return !trimmed.isEmpty && !nameAlreadyExists(trimmed)
     }
 
     var body: some View {
@@ -47,27 +58,29 @@ struct ExerciseSelectorView: View {
 
                 List {
                     ForEach(filteredExercises) { exercise in
-                        HStack {
-                            Text(exercise.name)
-                                .foregroundStyle(.white)
-                            Spacer()
-                            if selectedExercise?.persistentModelID == exercise.persistentModelID {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(settings.accentColor)
-                                    .fontWeight(.semibold)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
+                        Button {
                             selectedExercise = exercise
                             dismiss()
+                        } label: {
+                            HStack {
+                                Text(exercise.name)
+                                    .foregroundStyle(.white)
+                                Spacer()
+                                if selectedExercise?.persistentModelID == exercise.persistentModelID {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(settings.accentColor)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .listRowPressHighlight()
+                        .listRowSeparatorTint(Color.white.opacity(0.08))
                         .onLongPressGesture(minimumDuration: 0.5) {
                             editingExercise = exercise
                             editingName = exercise.name
                         }
-                        .listRowBackground(Color(hex: "#242424"))
-                        .listRowSeparatorTint(Color.white.opacity(0.08))
                     }
 
                     if !searchText.isEmpty && !hasExactMatch {
@@ -157,19 +170,27 @@ struct ExerciseSelectorView: View {
                         .foregroundStyle(.white)
                 }
 
-                TextField("Exercise name", text: $newExerciseName)
-                    .textFieldStyle(.plain)
-                    .focused($nameFieldFocused)
-                    .padding(12)
-                    .background(Color.white.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .foregroundStyle(.white)
-                    .submitLabel(.done)
-                    .onSubmit {
-                        if !newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty {
-                            createExercise()
+                VStack(spacing: 6) {
+                    TextField("Exercise name", text: $newExerciseName)
+                        .textFieldStyle(.plain)
+                        .focused($nameFieldFocused)
+                        .padding(12)
+                        .background(Color.white.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .foregroundStyle(.white)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            if canCreate { createExercise() }
                         }
+
+                    if nameAlreadyExists(newExerciseName) {
+                        Text("An exercise with this name already exists")
+                            .font(.caption)
+                            .foregroundStyle(.red.opacity(0.8))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 4)
                     }
+                }
 
                 HStack(spacing: 12) {
                     Button("Cancel") { dismissNewPopup() }
@@ -184,10 +205,9 @@ struct ExerciseSelectorView: View {
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty
-                                    ? Color.gray.opacity(0.3) : settings.accentColor)
+                        .background(canCreate ? settings.accentColor : Color.gray.opacity(0.3))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .disabled(newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(!canCreate)
                 }
             }
             .padding(24)
@@ -255,7 +275,7 @@ struct ExerciseSelectorView: View {
 
     private func addExercise(name: String) {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, !nameAlreadyExists(trimmed) else { return }
         let exercise = Exercise(name: trimmed)
         modelContext.insert(exercise)
         selectedExercise = exercise
@@ -270,7 +290,7 @@ struct ExerciseSelectorView: View {
 
     private func createExercise() {
         let trimmed = newExerciseName.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, !nameAlreadyExists(trimmed) else { return }
         let exercise = Exercise(name: trimmed)
         modelContext.insert(exercise)
         selectedExercise = exercise

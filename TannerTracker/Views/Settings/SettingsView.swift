@@ -4,15 +4,18 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @Environment(AppSettings.self) var settings
 
     @State private var accentColor: Color = AppSettings.shared.accentColor
     @State private var showWorkoutList = false
     @State private var showRemovedExercises = false
     @State private var dummySelectedExercise: Exercise? = nil
+
 
     var body: some View {
         @Bindable var settings = settings
@@ -89,8 +92,10 @@ struct SettingsView: View {
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(.gray)
                             }
+                            .contentShape(Rectangle())
                         }
-                        .listRowBackground(Color(hex: "#242424"))
+                        .buttonStyle(.plain)
+                        .listRowPressHighlight()
 
                         Button {
                             showRemovedExercises = true
@@ -103,12 +108,47 @@ struct SettingsView: View {
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(.gray)
                             }
+                            .contentShape(Rectangle())
                         }
-                        .listRowBackground(Color(hex: "#242424"))
+                        .buttonStyle(.plain)
+                        .listRowPressHighlight()
                     } header: {
                         Text("Exercises")
                             .foregroundStyle(.gray)
                     }
+
+                    #if DEBUG
+                    Section {
+                        Button {
+                            loadSampleData()
+                        } label: {
+                            HStack {
+                                Text("Load Sample Data")
+                                    .foregroundStyle(.orange)
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowPressHighlight()
+
+                        Button {
+                            wipeAllData()
+                        } label: {
+                            HStack {
+                                Text("Wipe All Data")
+                                    .foregroundStyle(.red)
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowPressHighlight()
+                    } header: {
+                        Text("Developer")
+                            .foregroundStyle(.gray)
+                    }
+                    #endif
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -131,7 +171,68 @@ struct SettingsView: View {
             RemovedExercisesView()
         }
     }
+
+    #if DEBUG
+    private func loadSampleData() {
+        let existing = (try? modelContext.fetch(FetchDescriptor<Exercise>())) ?? []
+        let existingNames = Set(existing.map { $0.name })
+
+        let calendar = Calendar.current
+        let today = Date()
+
+        typealias EntryTuple = (weight: Double, reps: Int, sets: Int, daysAgo: Int)
+        let exerciseData: [(name: String, history: [EntryTuple], todayWeight: Double, todayReps: Int, todaySets: Int)] = [
+            ("Bench Press",
+             [(95,10,3,42),(105,10,3,35),(115,8,3,28),(125,8,3,21),(135,6,3,14),(140,6,4,7)],
+             145, 5, 4),
+            ("Squat",
+             [(135,10,3,40),(145,10,3,33),(155,8,3,26),(165,8,3,19),(175,6,3,12),(185,6,4,5)],
+             195, 5, 4),
+            ("Deadlift",
+             [(185,8,3,38),(205,8,3,31),(225,6,3,24),(245,5,3,17),(265,5,3,10),(275,4,3,3)],
+             285, 3, 3),
+            ("Overhead Press",
+             [(65,10,3,36),(70,10,3,29),(75,8,3,22),(80,8,3,15),(85,6,3,8),(90,6,3,1)],
+             95, 5, 3),
+            ("Barbell Row",
+             [(95,10,3,34),(105,10,3,27),(115,8,3,20),(125,8,3,13),(135,6,3,6)],
+             140, 6, 3),
+            ("Pull-ups",
+             [(0,8,3,30),(0,10,3,23),(0,12,3,16),(0,12,4,9),(0,12,4,2)],
+             0, 12, 4)
+        ]
+
+        for data in exerciseData {
+            guard !existingNames.contains(data.name) else { continue }
+            let exercise = Exercise(name: data.name)
+            modelContext.insert(exercise)
+            for entry in data.history {
+                let date = calendar.date(byAdding: .day, value: -entry.daysAgo, to: today) ?? today
+                modelContext.insert(WorkoutEntry(
+                    exercise: exercise,
+                    weight: entry.weight,
+                    reps: entry.reps,
+                    sets: entry.sets,
+                    date: date
+                ))
+            }
+            modelContext.insert(WorkoutEntry(
+                exercise: exercise,
+                weight: data.todayWeight,
+                reps: data.todayReps,
+                sets: data.todaySets,
+                date: today
+            ))
+        }
+    }
+
+    private func wipeAllData() {
+        try? modelContext.delete(model: WorkoutEntry.self)
+        try? modelContext.delete(model: Exercise.self)
+    }
+    #endif
 }
+
 
 #Preview {
     SettingsView()

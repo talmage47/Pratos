@@ -20,7 +20,7 @@ struct ContentView: View {
                 TodayView()
             }
             Tab("Progress", systemImage: "figure.strengthtraining.traditional", value: AppTab.progress) {
-                WorkoutProgressView()
+                ProgressTabView()
             }
             Tab("Add", systemImage: "plus", value: AppTab.add, role: .search) {
                 Color.clear

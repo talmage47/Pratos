@@ -13,11 +13,18 @@ struct AddWorkoutView: View {
     var editingEntry: WorkoutEntry?
     var date: Date
 
+    @Query(sort: \WorkoutEntry.time, order: .reverse) private var allEntries: [WorkoutEntry]
+
     @State private var selectedExercise: Exercise?
     @State private var weight: Double
     @State private var reps: Int
     @State private var sets: Int
     @State private var showExerciseSelector = false
+    @State private var defaultsApplied = false
+
+    private var lastEntryForDate: WorkoutEntry? {
+        allEntries.first { Calendar.current.isDate($0.date, inSameDayAs: date) }
+    }
 
     private static let weightValues: [Double] = {
         var values: [Double] = [0]
@@ -59,6 +66,19 @@ struct AddWorkoutView: View {
                     Button("Cancel") { dismiss() }
                         .foregroundStyle(.gray)
                 }
+            }
+        }
+        .onAppear {
+            guard !defaultsApplied, editingEntry == nil else {
+                defaultsApplied = true
+                return
+            }
+            defaultsApplied = true
+            if let last = lastEntryForDate {
+                selectedExercise = last.exercise
+                weight = last.weight
+                reps = last.reps
+                sets = last.sets
             }
         }
         .presentationDragIndicator(.visible)

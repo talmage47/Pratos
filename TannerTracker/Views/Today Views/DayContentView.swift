@@ -17,9 +17,12 @@ struct DayContentView: View {
     @State private var displayDate: Date
     @State private var dragOffset: CGFloat = 0
     @State private var transitionOffset: CGFloat = 0
+    @State private var dragDirection: DragDirection = .undecided
+    @State private var isTransitioning = false
     @State private var editingEntry: WorkoutEntry?
-    @State private var entryToDelete: WorkoutEntry?
-    @State private var showDeleteAlert = false
+    @State private var expandedEntryID: WorkoutEntry.ID?
+
+    private enum DragDirection { case undecided, horizontal, vertical }
     @State private var showAddWorkoutForDate = false
 
     private let screenWidth = UIScreen.main.bounds.width
@@ -68,6 +71,7 @@ struct DayContentView: View {
     }
 
     private func completeDrag(translation: CGFloat) {
+        isTransitioning = true
         let goingRight = translation > 0
         withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
             dragOffset = goingRight ? screenWidth : -screenWidth
@@ -78,6 +82,7 @@ struct DayContentView: View {
             displayDate = newDate
             selectedDate = newDate
             dragOffset = 0
+            isTransitioning = false
         }
     }
 
@@ -91,6 +96,7 @@ struct DayContentView: View {
         let calendar = Calendar.current
         guard !calendar.isDate(target, inSameDayAs: displayDate) else { return }
 
+        isTransitioning = true
         let goingRight = target < displayDate
         withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
             transitionOffset = goingRight ? screenWidth : -screenWidth
@@ -103,6 +109,9 @@ struct DayContentView: View {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
                     transitionOffset = 0
                 }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                isTransitioning = false
             }
         }
     }
@@ -138,7 +147,8 @@ struct DayContentView: View {
                                 accentColor: settings.accentColor,
                                 isEditing: false,
                                 onTap: { _ in },
-                                onDelete: { _ in }
+                                onDelete: { _ in },
+                                expandedEntryID: .constant(nil)
                             )
                         }
                     }
@@ -146,6 +156,8 @@ struct DayContentView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 120)
                 }
+                .ignoresSafeArea(.container, edges: .bottom)
+                .scrollDisabled(dragDirection == .horizontal || isTransitioning)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -165,6 +177,7 @@ struct DayContentView: View {
                         emptyStateView
                     } else {
                         workoutList
+                            .id(displayDate)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -174,14 +187,24 @@ struct DayContentView: View {
                     .offset(x: dragOffset + screenWidth)
             }
             .clipped()
+            .ignoresSafeArea(.container, edges: .bottom)
             .contentShape(Rectangle())
             .simultaneousGesture(
                 DragGesture(minimumDistance: 10)
                     .onChanged { value in
-                        guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                        // Let the row's swipe-right gesture handle dismissing the delete button
+                        if expandedEntryID != nil && value.translation.width > 0 { return }
+                        if dragDirection == .undecided {
+                            dragDirection = abs(value.translation.width) > abs(value.translation.height)
+                                ? .horizontal : .vertical
+                        }
+                        guard dragDirection == .horizontal else { return }
                         dragOffset = value.translation.width
                     }
                     .onEnded { value in
+                        defer { dragDirection = .undecided }
+                        if expandedEntryID != nil && value.translation.width > 0 { return }
+                        guard dragDirection == .horizontal else { return }
                         let h = value.translation.width
                         let v = value.translation.height
                         if abs(h) > 60 && abs(h) > abs(v) {
@@ -228,10 +251,8 @@ struct DayContentView: View {
                         accentColor: settings.accentColor,
                         isEditing: isEditing,
                         onTap: { entry in editingEntry = entry },
-                        onDelete: { entry in
-                            entryToDelete = entry
-                            showDeleteAlert = true
-                        }
+                        onDelete: { entry in modelContext.delete(entry) },
+                        expandedEntryID: $expandedEntryID
                     )
                 }
 
@@ -252,16 +273,14 @@ struct DayContentView: View {
             .padding(.bottom, 120)
             .animation(.easeInOut(duration: 0.25), value: isEditing)
         }
-        .alert("Delete Workout", isPresented: $showDeleteAlert, presenting: entryToDelete) { entry in
-            Button("Delete", role: .destructive) {
-                modelContext.delete(entry)
-                entryToDelete = nil
+        .ignoresSafeArea(.container, edges: .bottom)
+        .scrollDisabled(dragDirection == .horizontal || isTransitioning)
+        .onScrollPhaseChange { _, newPhase in
+            if newPhase == .interacting, expandedEntryID != nil {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    expandedEntryID = nil
+                }
             }
-            Button("Cancel", role: .cancel) {
-                entryToDelete = nil
-            }
-        } message: { entry in
-            Text("Delete \(entry.exercise?.name ?? "this workout")?")
         }
     }
 }

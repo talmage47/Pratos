@@ -104,8 +104,9 @@ struct ExerciseProgressView: View {
                     maxWeightByRepsCard
                 }
                 .padding(16)
-                .padding(.bottom, 24)
+                .padding(.bottom, 100)
             }
+            .ignoresSafeArea(.container, edges: .bottom)
         }
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.large)

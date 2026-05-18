@@ -1,12 +1,12 @@
 //
-//  WorkoutProgressView.swift
+//  ProgressTabView.swift
 //  TannerTracker
 //
 
 import SwiftUI
 import SwiftData
 
-struct WorkoutProgressView: View {
+struct ProgressTabView: View {
     @Environment(AppSettings.self) var settings
     @Query(filter: #Predicate<Exercise> { $0.isRemoved == false }, sort: \Exercise.name)
     private var exercises: [Exercise]
@@ -79,10 +79,11 @@ struct WorkoutProgressView: View {
                                                 .foregroundStyle(.gray)
                                                 .font(.caption.weight(.semibold))
                                         }
+                                        .contentShape(Rectangle())
                                         .padding(.horizontal, 20)
                                         .padding(.vertical, 16)
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(ListRowButtonStyle())
 
                                     if index < filteredExercises.count - 1 {
                                         Rectangle()
@@ -97,8 +98,9 @@ struct WorkoutProgressView: View {
                             .padding(.horizontal, 16)
                         }
                     }
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 100)
                 }
+                .ignoresSafeArea(.container, edges: .bottom)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -121,6 +123,6 @@ struct WorkoutProgressView: View {
 }
 
 #Preview {
-    WorkoutProgressView()
+    ProgressTabView()
         .environment(AppSettings.shared)
 }
