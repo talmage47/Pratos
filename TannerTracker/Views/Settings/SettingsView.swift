@@ -180,49 +180,62 @@ struct SettingsView: View {
         let calendar = Calendar.current
         let today = Date()
 
-        typealias EntryTuple = (weight: Double, reps: Int, sets: Int, daysAgo: Int)
-        let exerciseData: [(name: String, history: [EntryTuple], todayWeight: Double, todayReps: Int, todaySets: Int)] = [
-            ("Bench Press",
-             [(95,10,3,42),(105,10,3,35),(115,8,3,28),(125,8,3,21),(135,6,3,14),(140,6,4,7)],
-             145, 5, 4),
-            ("Squat",
-             [(135,10,3,40),(145,10,3,33),(155,8,3,26),(165,8,3,19),(175,6,3,12),(185,6,4,5)],
-             195, 5, 4),
-            ("Deadlift",
-             [(185,8,3,38),(205,8,3,31),(225,6,3,24),(245,5,3,17),(265,5,3,10),(275,4,3,3)],
-             285, 3, 3),
-            ("Overhead Press",
-             [(65,10,3,36),(70,10,3,29),(75,8,3,22),(80,8,3,15),(85,6,3,8),(90,6,3,1)],
-             95, 5, 3),
-            ("Barbell Row",
-             [(95,10,3,34),(105,10,3,27),(115,8,3,20),(125,8,3,13),(135,6,3,6)],
-             140, 6, 3),
-            ("Pull-ups",
-             [(0,8,3,30),(0,10,3,23),(0,12,3,16),(0,12,4,9),(0,12,4,2)],
-             0, 12, 4)
+        // Disable autosave so all inserts land in a single transaction,
+        // triggering one UI refresh instead of one per exercise.
+        modelContext.autosaveEnabled = false
+        defer {
+            try? modelContext.save()
+            modelContext.autosaveEnabled = true
+        }
+
+        // name, starting weight, lbs gained per week, rep rotation, sets
+        typealias ExSpec = (name: String, start: Double, gain: Double, repCycle: [Int], sets: Int)
+        let specs: [ExSpec] = [
+            ("Bench Press",    95,  1.00, [5, 8, 10, 12],  3),
+            ("Squat",          135, 1.50, [5, 6, 8, 10],   3),
+            ("Deadlift",       185, 2.00, [3, 5, 6, 8],    3),
+            ("Overhead Press", 65,  0.75, [6, 8, 10, 12],  3),
+            ("Barbell Row",    95,  1.00, [6, 8, 10, 12],  3),
+            ("Incline Bench",  75,  0.75, [8, 10, 12, 15], 3),
+            ("Romanian DL",    135, 1.25, [6, 8, 10, 12],  3),
+            ("Leg Press",      225, 2.50, [8, 10, 12, 15], 4),
         ]
 
-        for data in exerciseData {
-            guard !existingNames.contains(data.name) else { continue }
-            let exercise = Exercise(name: data.name)
+        // Small repeating variation so the line isn't perfectly straight
+        let wave: [Double] = [0, 2.5, 5, 2.5, 0, -2.5, 0, 2.5, 5, 0]
+        let totalWeeks = 104  // ~2 years
+
+        // Weight multipliers keyed by rep count — heavier weight for lower reps
+        func weightForReps(_ base: Double, reps: Int) -> Double {
+            let multipliers: [Int: Double] = [3: 1.20, 5: 1.10, 6: 1.05, 8: 1.00,
+                                               10: 0.92, 12: 0.85, 15: 0.78]
+            return base * (multipliers[reps] ?? 1.0)
+        }
+
+        for spec in specs {
+            guard !existingNames.contains(spec.name) else { continue }
+            let exercise = Exercise(name: spec.name)
             modelContext.insert(exercise)
-            for entry in data.history {
-                let date = calendar.date(byAdding: .day, value: -entry.daysAgo, to: today) ?? today
+
+            // 0...totalWeeks so week == totalWeeks produces weeksAgo == 0 (today)
+            for week in 0...totalWeeks {
+                // Skip one week in every five to simulate missed workouts
+                guard week % 5 != 2 else { continue }
+
+                let weeksAgo = totalWeeks - week
+                guard let date = calendar.date(byAdding: .weekOfYear, value: -weeksAgo, to: today) else { continue }
+
+                let reps = spec.repCycle[week % spec.repCycle.count]
+                let base = spec.start + Double(week) * spec.gain + wave[week % wave.count]
+                let weight = weightForReps(base, reps: reps)
                 modelContext.insert(WorkoutEntry(
                     exercise: exercise,
-                    weight: entry.weight,
-                    reps: entry.reps,
-                    sets: entry.sets,
+                    weight: max(weight, 0),
+                    reps: reps,
+                    sets: spec.sets,
                     date: date
                 ))
             }
-            modelContext.insert(WorkoutEntry(
-                exercise: exercise,
-                weight: data.todayWeight,
-                reps: data.todayReps,
-                sets: data.todaySets,
-                date: today
-            ))
         }
     }
 
