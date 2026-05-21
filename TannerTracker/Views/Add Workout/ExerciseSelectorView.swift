@@ -25,6 +25,7 @@ struct ExerciseSelectorView: View {
     @State private var editingName = ""
     @State private var showRemoveWarning = false
     @FocusState private var editFieldFocused: Bool
+    @FocusState private var searchFocused: Bool
 
     private var filteredExercises: [Exercise] {
         guard !searchText.isEmpty else { return exercises }
@@ -98,6 +99,7 @@ struct ExerciseSelectorView: View {
                         .listRowSeparatorTint(Color.white.opacity(0.08))
                     } else if searchText.isEmpty {
                         Button {
+                            searchFocused = false
                             showNewExercisePopup = true
                             nameFieldFocused = true
                         } label: {
@@ -113,7 +115,7 @@ struct ExerciseSelectorView: View {
                     }
                 }
                 .scrollContentBackground(.hidden)
-                .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search exercises")
+                .scrollDismissesKeyboard(.immediately)
 
                 if showNewExercisePopup {
                     newExerciseOverlay
@@ -122,6 +124,9 @@ struct ExerciseSelectorView: View {
                 if editingExercise != nil {
                     editExerciseOverlay
                 }
+            }
+            .safeAreaInset(edge: .bottom) {
+                searchBar
             }
             .navigationTitle("Select Exercise")
             .navigationBarTitleDisplayMode(.inline)
@@ -135,6 +140,7 @@ struct ExerciseSelectorView: View {
         .presentationDragIndicator(.visible)
         .onChange(of: editingExercise) { _, new in
             if new != nil {
+                searchFocused = false
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                     editFieldFocused = true
                 }
@@ -149,6 +155,35 @@ struct ExerciseSelectorView: View {
         } message: {
             Text("This exercise will be removed from the list but can be recovered in Settings.")
         }
+    }
+
+    // MARK: - Search Bar
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+                .font(.system(size: 16, weight: .medium))
+
+            TextField("Search exercises", text: $searchText)
+                .focused($searchFocused)
+                .submitLabel(.search)
+                .autocorrectionDisabled()
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .glassEffect(in: Capsule())
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
     }
 
     // MARK: - New Exercise Overlay
