@@ -47,7 +47,6 @@ private enum ChartMode: Equatable {
 struct ExerciseProgressView: View {
     let exercise: Exercise
     @Environment(AppSettings.self) var settings
-    @Query private var allEntries: [WorkoutEntry]
 
     @State private var selectedRange: TimeRange = .all
     @State private var selectedPoint: DayEpley? = nil
@@ -55,7 +54,7 @@ struct ExerciseProgressView: View {
     @State private var chartMode: ChartMode = .estimatedOneRM
 
     private var exerciseEntries: [WorkoutEntry] {
-        allEntries.filter { $0.exercise?.persistentModelID == exercise.persistentModelID }
+        (exercise.entries ?? []).sorted { $0.date < $1.date }
     }
 
     private func dw(_ lbs: Double) -> Double {

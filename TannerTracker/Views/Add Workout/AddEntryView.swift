@@ -1,12 +1,12 @@
 //
-//  AddWorkoutView.swift
+//  AddEntryView.swift
 //  TannerTracker
 //
 
 import SwiftUI
 import SwiftData
 
-struct AddWorkoutView: View {
+struct AddEntryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(AppSettings.self) var settings
@@ -77,12 +77,13 @@ struct AddWorkoutView: View {
                     .padding(.bottom, 48)
                 }
             }
-            .navigationTitle(editingEntry == nil ? "Add Workout" : "Edit Workout")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(.gray)
+                ToolbarItem(placement: .principal) {
+                    Text(editingEntry == nil ? "Add Entry" : "Edit Entry")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
                 }
             }
         }
@@ -217,18 +218,42 @@ struct AddWorkoutView: View {
     }
 
     private var saveButton: some View {
-        Button {
-            save()
-        } label: {
-            Text(editingEntry == nil ? "Save Workout" : "Update Workout")
-                .font(.headline)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(selectedExercise == nil ? Color.gray.opacity(0.3) : settings.accentColor)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+        HStack(spacing: 16) {
+            if editingEntry != nil {
+                Button {
+                    deleteEntry()
+                } label: {
+                    Text("Delete")
+                        .font(.headline)
+                        .foregroundStyle(.red)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 14)
+                }
+                .glassEffect(in: Capsule())
+                .buttonStyle(.plain)
+            }
+
+            Button {
+                save()
+            } label: {
+                Text("Save")
+                    .font(.headline)
+                    .foregroundStyle(selectedExercise == nil ? .gray : settings.accentColor)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 14)
+            }
+            .glassEffect(in: Capsule())
+            .buttonStyle(.plain)
+            .disabled(selectedExercise == nil)
         }
-        .disabled(selectedExercise == nil)
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    private func deleteEntry() {
+        if let entry = editingEntry {
+            modelContext.delete(entry)
+        }
+        dismiss()
     }
 
     private func formatWeight(_ value: Double) -> String {
@@ -257,6 +282,6 @@ struct AddWorkoutView: View {
 }
 
 #Preview {
-    AddWorkoutView()
+    AddEntryView()
         .environment(AppSettings.shared)
 }

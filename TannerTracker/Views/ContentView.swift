@@ -16,10 +16,10 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Today", systemImage: "calendar", value: AppTab.today) {
-                TodayView()
+            Tab("Workout", systemImage: "figure.strengthtraining.traditional", value: AppTab.today) {
+                HomeView()
             }
-            Tab("Progress", systemImage: "figure.strengthtraining.traditional", value: AppTab.progress) {
+            Tab("Progress", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
                 ProgressTabView()
             }
             Tab("Add", systemImage: "plus", value: AppTab.add, role: .search) {
@@ -35,7 +35,7 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $showAddWorkout) {
-            AddWorkoutView()
+            AddEntryView()
         }
     }
 }

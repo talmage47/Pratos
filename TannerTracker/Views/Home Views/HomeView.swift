@@ -1,12 +1,12 @@
 //
-//  TodayView.swift
+//  HomeView.swift
 //  TannerTracker
 //
 
 import SwiftUI
 import SwiftData
 
-struct TodayView: View {
+struct HomeView: View {
     @Environment(AppSettings.self) var settings
 
     @State private var showMonthView = false
@@ -163,8 +163,9 @@ struct TodayView: View {
                             }
                         } label: {
                             Image(systemName: isEditing ? "checkmark" : "pencil")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 16, weight: .medium))
                                 .foregroundStyle(settings.accentColor)
+                                .padding(6)
                         }
                         .buttonStyle(.plain)
                     }
@@ -173,8 +174,9 @@ struct TodayView: View {
                             showSettings = true
                         } label: {
                             Image(systemName: "gearshape")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 16, weight: .medium))
                                 .foregroundStyle(settings.accentColor)
+                                .padding(6)
                         }
                         .buttonStyle(.plain)
                     }
@@ -192,6 +194,6 @@ struct TodayView: View {
 }
 
 #Preview {
-    TodayView()
+    HomeView()
         .environment(AppSettings.shared)
 }

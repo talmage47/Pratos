@@ -15,12 +15,13 @@ struct ExerciseSelectorView: View {
     var body: some View {
         NavigationStack {
             ExerciseList(selectedExercise: $selectedExercise, onRowTap: { _ in dismiss() })
-                .navigationTitle("Select Exercise")
+                .navigationTitle("")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Cancel") { dismiss() }
-                            .tint(.gray)
+                    ToolbarItem(placement: .principal) {
+                        Text("Select Exercise")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
                     }
                 }
         }

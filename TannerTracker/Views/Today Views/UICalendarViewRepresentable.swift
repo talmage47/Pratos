@@ -51,7 +51,7 @@ struct UICalendarViewRepresentable: UIViewRepresentable {
 
         func calendarView(_ calendarView: UICalendarView, decorationFor dateComponents: DateComponents) -> UICalendarView.Decoration? {
             guard hasWorkout(on: dateComponents) else { return nil }
-            return .default(color: accentColor, size: .small)
+            return .default(color: accentColor, size: .large)
         }
 
         func dateSelection(_ selection: UICalendarSelectionSingleDate, canSelectDate dateComponents: DateComponents?) -> Bool {

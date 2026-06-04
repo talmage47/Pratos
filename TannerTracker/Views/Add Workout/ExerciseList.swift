@@ -143,6 +143,7 @@ struct ExerciseList: View {
         .alert("Edit Exercise", isPresented: $showEditAlert) {
             TextField("Exercise name", text: $editingName)
             Button("Save") { saveEdit() }
+            Button("Cancel", role: .cancel) { dismissEditPopup() }
             Button("Remove Exercise", role: .destructive) {
                 dismissEditPopup()
                 showRemoveWarning = true

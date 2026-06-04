@@ -10,15 +10,15 @@ struct ProgressTabView: View {
     @Environment(AppSettings.self) var settings
 
     @State private var showSettings = false
-    @State private var navExercise: Exercise? = nil
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
-            ExerciseList(onRowTap: { navExercise = $0 }, showChevron: true)
+        NavigationStack(path: $path) {
+            ExerciseList(onRowTap: { path.append($0) }, showChevron: true)
                 .navigationTitle("Progress")
                 .navigationBarTitleDisplayMode(.large)
-                .navigationDestination(item: $navExercise) {
-                    ExerciseProgressView(exercise: $0)
+                .navigationDestination(for: Exercise.self) { exercise in
+                    ExerciseProgressView(exercise: exercise)
                 }
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -26,8 +26,9 @@ struct ProgressTabView: View {
                             showSettings = true
                         } label: {
                             Image(systemName: "gearshape")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 16, weight: .medium))
                                 .foregroundStyle(settings.accentColor)
+                                .padding(6)
                         }
                         .buttonStyle(.plain)
                     }

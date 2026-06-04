@@ -21,6 +21,7 @@ struct DayContentView: View {
     @State private var isTransitioning = false
     @State private var editingEntry: WorkoutEntry?
     @State private var expandedEntryID: WorkoutEntry.ID?
+    @State private var suppressNextTap = false
 
     private enum DragDirection { case undecided, horizontal, vertical }
     @State private var showAddWorkoutForDate = false
@@ -45,7 +46,9 @@ struct DayContentView: View {
     }
 
     private func entries(for date: Date) -> [WorkoutEntry] {
-        allEntries.filter { Calendar.current.isDate($0.date, inSameDayAs: date) }
+        let start = Calendar.current.startOfDay(for: date)
+        let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
+        return allEntries.filter { $0.date >= start && $0.date < end }
     }
 
     private struct ExerciseGroup: Identifiable {
@@ -193,17 +196,20 @@ struct DayContentView: View {
             .simultaneousGesture(
                 DragGesture(minimumDistance: 10)
                     .onChanged { value in
-                        // Let the row's swipe-right gesture handle dismissing the delete button
                         if expandedEntryID != nil && value.translation.width > 0 { return }
                         if dragDirection == .undecided {
                             dragDirection = abs(value.translation.width) > abs(value.translation.height)
                                 ? .horizontal : .vertical
+                            if dragDirection == .horizontal { suppressNextTap = true }
                         }
                         guard dragDirection == .horizontal else { return }
                         dragOffset = value.translation.width
                     }
                     .onEnded { value in
-                        defer { dragDirection = .undecided }
+                        defer {
+                            dragDirection = .undecided
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { suppressNextTap = false }
+                        }
                         if expandedEntryID != nil && value.translation.width > 0 { return }
                         guard dragDirection == .horizontal else { return }
                         let h = value.translation.width
@@ -220,10 +226,10 @@ struct DayContentView: View {
             animateToDate(newDate)
         }
         .sheet(item: $editingEntry) { entry in
-            AddWorkoutView(editingEntry: entry)
+            AddEntryView(editingEntry: entry)
         }
         .sheet(isPresented: $showAddWorkoutForDate) {
-            AddWorkoutView(date: displayDate)
+            AddEntryView(date: displayDate)
         }
     }
 
@@ -252,7 +258,10 @@ struct DayContentView: View {
                         accentColor: settings.accentColor,
                         isMetric: settings.isMetric,
                         isEditing: isEditing,
-                        onTap: { entry in editingEntry = entry },
+                        onTap: { entry in
+                            guard !suppressNextTap else { return }
+                            editingEntry = entry
+                        },
                         onDelete: { entry in modelContext.delete(entry) },
                         expandedEntryID: $expandedEntryID
                     )
