@@ -4,7 +4,8 @@
       "Bash(xargs cat *)",
       "Bash(grep \"\\\\.swift$\")",
       "Bash(xcodebuild -scheme TannerTracker -destination \"generic/platform=iOS Simulator\" -quiet build)",
-      "Bash(xcodebuild -scheme TannerTracker -destination \"generic/platform=iOS Simulator\" build)"
+      "Bash(xcodebuild -scheme TannerTracker -destination \"generic/platform=iOS Simulator\" build)",
+      "Bash(xcodebuild -scheme Pratos -destination 'generic/platform=iOS' build)"
     ]
   }
 }

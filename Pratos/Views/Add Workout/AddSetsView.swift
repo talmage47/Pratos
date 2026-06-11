@@ -57,7 +57,7 @@ struct AddSetsView: View {
         let displayVal = s.displayWeight(editingGroup?.weight ?? 0)
         _weight = State(initialValue: Self.nearestPickerValue(displayVal, isMetric: s.isMetric))
         _reps = State(initialValue: editingGroup?.reps ?? 10)
-        _sets = State(initialValue: editingGroup?.count ?? 3)
+        _sets = State(initialValue: editingGroup?.count ?? 1)
     }
 
     var body: some View {
